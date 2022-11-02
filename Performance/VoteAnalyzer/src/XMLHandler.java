@@ -1,5 +1,4 @@
 import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import java.text.ParseException;
@@ -14,18 +13,18 @@ public class XMLHandler extends DefaultHandler {
     private final SimpleDateFormat visitDateFormat;
 
     private Voter voter;
-    private Map<Voter, Integer> voterCounts = new HashMap<>();
-    ;
-    private Map<Integer, WorkTime> voteStationWorkTimes = new HashMap<>();
-
+    private Map<Integer, WorkTime> voteStationWorkTimes;
+    private Map<Voter, Integer> voterCounts;
 
     public XMLHandler(SimpleDateFormat birthDayFormat, SimpleDateFormat visitDateFormat) {
         this.birthDayFormat = birthDayFormat;
         this.visitDateFormat = visitDateFormat;
+        voteStationWorkTimes = new HashMap<>();
+        voterCounts = new HashMap<>();
     }
 
     @Override
-    public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+    public void startElement(String uri, String localName, String qName, Attributes attributes) {
 
         try {
             if (qName.equals("voter") && voter == null) {
@@ -36,7 +35,7 @@ public class XMLHandler extends DefaultHandler {
                 int count = voterCounts.getOrDefault(voter, 0);
                 voterCounts.put(voter, count + 1);
 
-                Integer station = Integer.parseInt(attributes.getValue("station"));
+                int station = Integer.parseInt(attributes.getValue("station"));
                 Date time = visitDateFormat.parse(attributes.getValue("time"));
                 WorkTime workTime = voteStationWorkTimes.get(station);
                 if (workTime == null) {
@@ -49,7 +48,6 @@ public class XMLHandler extends DefaultHandler {
         } catch (ParseException e) {
             e.printStackTrace();
         }
-
     }
 
     @Override

@@ -11,28 +11,24 @@ public class Loader {
     public static void main(String[] args) throws Exception {
         String fileName = "res/data-18M.xml";
 
-        long usageMemoryForDOM = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+        long usage = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
         DOMParser domParser = new DOMParser(birthDayFormat, visitDateFormat, fileName);
         domParser.parseFile();
-//        PrinterResults printer = new PrinterResults(domParser.getVoterCounts(), domParser.getVoteStationWorkTimes());
-//        printer.printResult();
-        usageMemoryForDOM = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory() - usageMemoryForDOM;
+        PrinterResults printer = new PrinterResults(domParser.getVoteStationWorkTimes(), domParser.getVoterCounts());
+        printer.printResult();
+        usage = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory() - usage;
 
-        System.out.println("Usage memory for DOM parser is - " + usageMemoryForDOM);
+        System.out.println("Usage memory for DOM parser is - " + usage);
 
-
-        long usageMemoryForSAX = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+        usage = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
         SAXParserFactory factory = SAXParserFactory.newInstance();
         SAXParser parser = factory.newSAXParser();
         XMLHandler handler = new XMLHandler(birthDayFormat, visitDateFormat);
         parser.parse(new File(fileName), handler);
-//        printer = new PrinterResults(handler.getVoterCounts(), handler.getVoteStationWorkTimes());
-//        printer.printResult();
-        usageMemoryForSAX = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory() - usageMemoryForSAX;
+        printer = new PrinterResults(handler.getVoteStationWorkTimes(), handler.getVoterCounts());
+        printer.printResult();
+        usage = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory() - usage;
 
-        System.out.println("Usage memory for SAX parser is - " + usageMemoryForSAX);
-
+        System.out.println("Usage memory for SAX parser is - " + usage);
     }
-
-
 }
