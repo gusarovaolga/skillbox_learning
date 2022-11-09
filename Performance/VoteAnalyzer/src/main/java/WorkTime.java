@@ -1,6 +1,9 @@
+import lombok.Getter;
+
 import java.util.Date;
 import java.util.TreeSet;
 
+@Getter
 public class WorkTime {
     private final TreeSet<TimePeriod> periods;
 

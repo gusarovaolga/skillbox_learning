@@ -1,9 +1,12 @@
 import org.xml.sax.Attributes;
 import org.xml.sax.helpers.DefaultHandler;
 
+import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 public class XMLHandler extends DefaultHandler {
 
@@ -12,46 +15,52 @@ public class XMLHandler extends DefaultHandler {
 
     private Voter voter;
     private Map<Integer, WorkTime> voteStationWorkTimes;
-    private List<Voter> voters;
-    private boolean isVoterExist;
+
+    private int countVoters = 0;
+    private int batchSize;
 
     public XMLHandler(SimpleDateFormat birthDayFormat, SimpleDateFormat visitDateFormat) {
         this.birthDayFormat = birthDayFormat;
         this.visitDateFormat = visitDateFormat;
-        voteStationWorkTimes = new HashMap<>();
-        voters = new ArrayList<>();
+        this.voteStationWorkTimes = new HashMap<>();
     }
 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) {
+        int maxBatchSize = 5_000_000;
+        if (qName.equals("voter") && batchSize < maxBatchSize) {
+            Date birthday = null;
+            try {
+                birthday = birthDayFormat.parse(attributes.getValue("birthDay"));
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            voter = new Voter(attributes.getValue("name"), birthday);
+        } else if (qName.equals("visit") && voter != null) {
+            try {
+                DBConnection.preparedStatement.setString(1, voter.getName());
+                DBConnection.preparedStatement.setString(2, birthDayFormat.format(voter.getBirthDay()));
+                DBConnection.preparedStatement.addBatch();
+                countVoters++;
 
-        try {
-            if (qName.equals("voter") && voter == null) {
-                Date birthDay = birthDayFormat.parse(attributes.getValue("birthDay"));
-                String voterName = attributes.getValue("name");
-                voter = findVoterOrCreateNew(voterName, birthDay);
-
-            } else if (qName.equals("visit") && voter != null) {
-
-                int count = voter.getCountVote();
-                voter.setCountVote(count + 1);
-
-                if (!isVoterExist) {
-                    voters.add(voter);
-                }
-
-                int station = Integer.parseInt(attributes.getValue("station"));
+                int stationNumber = Integer.parseInt(attributes.getValue("station"));
                 Date time = visitDateFormat.parse(attributes.getValue("time"));
-                WorkTime workTime = voteStationWorkTimes.get(station);
+                WorkTime workTime = voteStationWorkTimes.get(stationNumber);
                 if (workTime == null) {
                     workTime = new WorkTime();
-                    voteStationWorkTimes.put(station, workTime);
+                    voteStationWorkTimes.put(stationNumber, workTime);
                 }
                 workTime.addVisitTime(time.getTime());
 
+                if (countVoters > 10000) {
+                    DBConnection.preparedStatement.executeBatch();
+                    DBConnection.connection.commit();
+                    countVoters = 0;
+                }
+            } catch (SQLException | ParseException ex) {
+                ex.printStackTrace();
             }
-        } catch (ParseException e) {
-            e.printStackTrace();
+            batchSize++;
         }
     }
 
@@ -60,26 +69,5 @@ public class XMLHandler extends DefaultHandler {
         if (qName.equals("voter")) {
             voter = null;
         }
-    }
-
-    private Voter findVoterOrCreateNew(String voterName, Date birthDay) {
-        for(Voter v : voters) {
-            if(v.getName().equals(voterName) ){
-                voter = v;
-                isVoterExist = true;
-                return voter;
-            }
-        }
-        voter = new Voter(voterName, birthDay);
-        isVoterExist = false;
-        return voter;
-    }
-
-    public List<Voter> getVoters() {
-        return voters;
-    }
-
-    public Map<Integer, WorkTime> getVoteStationWorkTimes() {
-        return voteStationWorkTimes;
     }
 }

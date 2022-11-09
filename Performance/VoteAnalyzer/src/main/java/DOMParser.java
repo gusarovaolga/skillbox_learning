@@ -7,35 +7,31 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 public class DOMParser {
 
-    private final SimpleDateFormat birthDayFormat;
     private final SimpleDateFormat visitDateFormat;
     private final String fileName;
-    private Map<Integer, WorkTime> voteStationWorkTimes;
-    private List<Voter> voterList;
     private Document doc;
-    private Voter voter;
-    private boolean isVoterExist;
 
-    public DOMParser(SimpleDateFormat birthDayFormat, SimpleDateFormat visitDateFormat, String fileName) {
-        this.birthDayFormat = birthDayFormat;
+    private Map<Integer, WorkTime> voteStationWorkTimes;
+
+    public DOMParser(SimpleDateFormat visitDateFormat, String fileName) {
         this.visitDateFormat = visitDateFormat;
         this.fileName = fileName;
-        voteStationWorkTimes = new HashMap<>();
-        voterList = new ArrayList<>();
+        this.voteStationWorkTimes = new HashMap<>();
     }
 
     public void parseFile() throws Exception {
-
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         DocumentBuilder db = dbf.newDocumentBuilder();
         doc = db.parse(new File(fileName));
 
         findEqualVoters();
-        fixWorkTimes();
+//        fixWorkTimes();
     }
 
     private void findEqualVoters() throws Exception {
@@ -46,30 +42,10 @@ public class DOMParser {
             NamedNodeMap attributes = node.getAttributes();
 
             String name = attributes.getNamedItem("name").getNodeValue();
-            Date birthDay = birthDayFormat.parse(attributes.getNamedItem("birthDay").getNodeValue());
-
-            Voter voter = findVoterOrCreateNew(name, birthDay);
-
-            int count = voter.getCountVote();
-            voter.setCountVote(count + 1);
-            if(!isVoterExist) {
-                voterList.add(voter);
-            }
+            String birthDay = attributes.getNamedItem("birthDay").getNodeValue();
+            DBConnection.countVoter(name, birthDay);
         }
-    }
-
-    private Voter findVoterOrCreateNew(String voterName, Date birthDay) {
-        for(Voter v : voterList) {
-            if(v.getName().equals(voterName) ){
-                voter = v;
-                isVoterExist = true;
-                return voter;
-            }
-        }
-
-        voter = new Voter(voterName, birthDay);
-        isVoterExist = false;
-        return voter;
+        DBConnection.executeMultiInsert();
     }
 
     private void fixWorkTimes() throws Exception {
@@ -88,13 +64,5 @@ public class DOMParser {
             }
             workTime.addVisitTime(time.getTime());
         }
-    }
-
-    public Map<Integer, WorkTime> getVoteStationWorkTimes() {
-        return voteStationWorkTimes;
-    }
-
-    public List<Voter> getVoterList() {
-        return voterList;
     }
 }
