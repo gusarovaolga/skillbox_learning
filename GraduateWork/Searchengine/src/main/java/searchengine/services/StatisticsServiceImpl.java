@@ -21,6 +21,21 @@ public class StatisticsServiceImpl implements StatisticsService {
     private final SitesList sites;
 
     @Override
+    public StatisticsResponse startIndexing() {
+        StatisticsResponse response = getStatistics();
+        List<DetailedStatisticsItem> detailed = response.getStatistics().getDetailed();
+
+        for(DetailedStatisticsItem item : detailed) {
+            String status = item.getStatus();
+            if(status.equals("INDEXING")) {
+                response.setResult(false);
+                System.out.println("Индексация уже запущена");
+            }
+        }
+        return response;
+    }
+
+    @Override
     public StatisticsResponse getStatistics() {
         String[] statuses = { "INDEXED", "FAILED", "INDEXING" };
         String[] errors = {
@@ -61,4 +76,6 @@ public class StatisticsServiceImpl implements StatisticsService {
         response.setResult(true);
         return response;
     }
+
+
 }

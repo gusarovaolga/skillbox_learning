@@ -17,8 +17,17 @@ public class ApiController {
         this.statisticsService = statisticsService;
     }
 
+    @GetMapping("/startIndexing")
+    public ResponseEntity<StatisticsResponse> startIndexing() {
+        return ResponseEntity.ok(statisticsService.startIndexing());
+    }
+
     @GetMapping("/statistics")
     public ResponseEntity<StatisticsResponse> statistics() {
         return ResponseEntity.ok(statisticsService.getStatistics());
     }
+
+
+
+
 }

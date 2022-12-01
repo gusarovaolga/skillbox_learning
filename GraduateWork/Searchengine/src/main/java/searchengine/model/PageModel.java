@@ -8,19 +8,18 @@ import javax.persistence.*;
 @Getter
 @Setter
 @Entity
-@Table(name = "page",
-        indexes = {
-                @Index(name = "path_indx", columnList = "path")})
+@Table(name = "page", indexes = {@Index(name = "path_index", columnList = "path")})
 public class PageModel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
 
-    @Column(name = "site_id")
-    private Integer siteId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "site_id", referencedColumnName = "id")
+    private SiteModel siteModel;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "path", columnDefinition = "TEXT", nullable = false, length = 30)
     private String path;
 
     private int code;
