@@ -1,15 +1,16 @@
 package searchengine.model;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
 
+@NoArgsConstructor
 @Getter
 @Setter
-@Entity
 @Table(name = "page", indexes = {@Index(name = "path_index", columnList = "path")})
-public class PageModel {
+public class PageEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -17,7 +18,7 @@ public class PageModel {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "site_id", referencedColumnName = "id")
-    private SiteModel siteModel;
+    private SiteEntity siteModel;
 
     @Column(name = "path", columnDefinition = "TEXT", nullable = false, length = 30)
     private String path;
