@@ -10,21 +10,27 @@ import javax.persistence.*;
 @Getter
 @Setter
 @Table(name = "page", indexes = {@Index(name = "path_index", columnList = "path")})
+@Entity
 public class PageEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "site_id", referencedColumnName = "id")
-    private SiteEntity siteModel;
+    private SiteEntity siteEntity;
 
+    /**
+     * адрес страницы от корня сайта
+     */
     @Column(name = "path", columnDefinition = "TEXT", nullable = false, length = 30)
     private String path;
 
+    @Column(name = "code")
     private int code;
 
-    @Column(columnDefinition = "MEDIUMTEXT")
+    @Column(name = "content", columnDefinition = "MEDIUMTEXT")
     private String content;
 }

@@ -20,24 +20,10 @@ public class StatisticsServiceImpl implements StatisticsService {
     private final Random random = new Random();
     private final SitesList sites;
 
-    @Override
-    public StatisticsResponse startIndexing() {
-        StatisticsResponse response = getStatistics();
-        List<DetailedStatisticsItem> detailed = response.getStatistics().getDetailed();
-
-        for(DetailedStatisticsItem item : detailed) {
-            String status = item.getStatus();
-            if(status.equals("INDEXING")) {
-                response.setResult(false);
-                System.out.println("Индексация уже запущена");
-            }
-        }
-        return response;
-    }
 
     @Override
     public StatisticsResponse getStatistics() {
-        String[] statuses = { "INDEXED", "FAILED", "INDEXING" };
+        String[] statuses = {"INDEXED", "FAILED", "INDEXING"};
         String[] errors = {
                 "Ошибка индексации: главная страница сайта не доступна",
                 "Ошибка индексации: сайт не доступен",
@@ -50,7 +36,7 @@ public class StatisticsServiceImpl implements StatisticsService {
 
         List<DetailedStatisticsItem> detailed = new ArrayList<>();
         List<Site> sitesList = sites.getSites();
-        for(int i = 0; i < sitesList.size(); i++) {
+        for (int i = 0; i < sitesList.size(); i++) {
             Site site = sitesList.get(i);
             DetailedStatisticsItem item = new DetailedStatisticsItem();
             item.setName(site.getName());

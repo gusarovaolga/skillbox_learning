@@ -1,70 +1,69 @@
 package searchengine.services;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import searchengine.config.Site;
 import searchengine.config.SitesList;
 import searchengine.model.PageEntity;
 import searchengine.model.SiteEntity;
-import searchengine.repositories.PageRepository;
+import searchengine.model.enums.Status;
 import searchengine.repositories.SiteRepository;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class IndexingServiceImpl implements IndexingService{
+@Slf4j
+public class IndexingServiceImpl implements IndexingService {
 
-    private SitesList sitesList;
+    private final SitesList sitesList;
 
-    private PageRepository pageRepository;
-    private SiteRepository siteRepository;
+    private final SiteRepository siteRepository;
 
     @Override
-    public void indexing() {
+    public void startIndexing() {
+        dropSiteIndexing();
 
-        for(Site site : sitesList.getSites()) {
+        List<SiteEntity> siteEntities = new ArrayList<>(sitesList.getSites().size());
+        for (Site site : sitesList.getSites()) {
+            SiteEntity siteEntity = createSiteEntity(site);
 
+            List<PageEntity> pages = getPagesForSite(siteEntity);
+            siteEntity.setPages(pages);
+
+            siteEntities.add(siteEntity);
         }
-
+        siteRepository.saveAll(siteEntities);
     }
 
-    @Override
-    public SiteEntity saveSiteEntity() {
-
-        SiteEntity siteEntity = createSiteEntity();
-
-
-        return siteRepository.save(siteEntity);
-    }
-
-    @Override
-    public PageEntity savePageEntity() {
-        return pageRepository.save(pageEntity);
-    }
-
-    @Override
-    public void deleteSiteEntity() {
-       siteRepository.deleteAll();
-    }
-
-    @Override
-    public void deletePageEntity() {
-        pageRepository.deleteAll();
+    private void dropSiteIndexing() {
+        siteRepository.deleteAll();
     }
 
     private SiteEntity createSiteEntity(Site site) {
         SiteEntity siteEntity = new SiteEntity();
-
-        siteEntity.setUrl(site.getUrl());
         siteEntity.setName(site.getName());
-        siteEntity.setStatus(SiteEntity.Status.INDEXING);
+        siteEntity.setUrl(siteEntity.getUrl());
+        siteEntity.setStatus(Status.INDEXING);
         siteEntity.setStatusTime(LocalDateTime.now());
-
-
-
-
         return siteEntity;
+    }
+
+    private List<PageEntity> getPagesForSite(SiteEntity siteEntity) {
+        return Collections.singletonList(createPageEntity(siteEntity));
+    }
+
+    private PageEntity createPageEntity(SiteEntity siteEntity) {
+        PageEntity pageEntity = new PageEntity();
+        pageEntity.setSiteEntity(siteEntity);
+        //TODO найти как заполнять path
+        String path = "path";
+        pageEntity.setPath(path);
+        return pageEntity;
     }
 
 
